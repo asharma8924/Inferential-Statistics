@@ -1,49 +1,90 @@
-# History files
-.Rhistory
-.Rapp.history
+<!--begin.rcode
+set.seed(79)
 
-# Session Data files
-.RData
-.RDataTmp
 
-# User-specific files
-.Ruserdata
+samples <- replicate(1000, runif(40))
 
-# Example code in package build process
-*-Ex.R
 
-# Output files from R CMD build
-/*.tar.gz
+sample_means <- apply(samples, 2, mean)
 
-# Output files from R CMD check
-/*.Rcheck/
 
-# RStudio files
-.Rproj.user/
+library(ggplot2)
+ggplot(data.frame(x = sample_means), aes(sample = x)) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(title = "Normality Plot of Sample Means",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles")
+end.rcode-->
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+<p>You can also embed plots, for example:</p>
 
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
+<!--begin.rcode fig.width=7, fig.height=6
+set.seed(79) 
 
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
+sample_means <- numeric(10000)
+for (i in 1:10000) {
+  sample <- rexp(n = 40, rate = 4)
+  sample_mean <- mean(sample)
+  sample_means[i] <- sample_mean
+}
+end.rcode-->
 
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
+<!--begin.rcode
+lower_limits <- numeric(10000)
+upper_limits <- numeric(10000)
+for (i in 1:10000) {
+  ci <- t.test(x = sample_means[i], n = 40, conf.level = 0.95)$conf.int
+  lower_limits[i] <- ci[1]
+  upper_limits[i] <- ci[2]
+}
 
-# R Environment Variables
-.Renviron
+mean_theoretical <- 1/4 
+prop_containing_theoretical <- mean(lower_limits <= mean_theoretical & upper_limits >= mean_theoretical)
+end.rcode-->
 
-# pkgdown site
-docs/
+<!--begin.rcode
 
-# translation temp files
-po/*~
+data(iris)
 
-# RStudio Connect folder
-rsconnect/
+
+setosa <- subset(iris, Species == "setosa")
+versicolor <- subset(iris, Species == "versicolor")
+virginica <- subset(iris, Species == "virginica")
+
+
+calculate_ci <- function(x) {
+  n <- length(x)
+  x_bar <- mean(x)
+  s <- sd(x)
+  t <- qt(0.975, df = n-1)
+  se <- s / sqrt(n)
+  lower <- x_bar - t * se
+  upper <- x_bar + t * se
+  ci <- c(lower, upper)
+  return(ci)
+}
+
+
+setosa_ci <- calculate_ci(setosa$Petal.Length)
+versicolor_ci <- calculate_ci(versicolor$Petal.Length)
+virginica_ci <- calculate_ci(virginica$Petal.Length)
+
+
+cat("Setosa confidence interval for Petal.Length:", setosa_ci[1], "-", setosa_ci[2], "\n")
+cat("Versicolor confidence interval for Petal.Length:", versicolor_ci[1], "-", versicolor_ci[2], "\n")
+cat("Virginica confidence interval for Petal.Length:", virginica_ci[1], "-", virginica_ci[2], "\n")
+end.rcode-->
+
+<!--begin.rcode
+data(iris)
+
+
+setosa <- subset(iris, Species == "setosa")
+
+
+t.test(setosa$Sepal.Width, mu = 3.38, alternative = "two.sided", conf.level = 0.95)
+end.rcode-->
+
+</body>
+</html>
